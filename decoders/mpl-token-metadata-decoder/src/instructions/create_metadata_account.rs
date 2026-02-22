@@ -1,10 +1,14 @@
+use super::super::types::*;
+
 use carbon_core::{account_utils::next_account, borsh, CarbonDeserialize};
 
 #[derive(
     CarbonDeserialize, Debug, serde::Serialize, serde::Deserialize, PartialEq, Eq, Clone, Hash,
 )]
 #[carbon(discriminator = "0x00")]
-pub struct CreateMetadataAccount {}
+pub struct CreateMetadataAccount {
+    pub create_metadata_account_args: CreateMetadataAccountArgs,
+}
 
 #[derive(Debug, PartialEq, Eq, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub struct CreateMetadataAccountInstructionAccounts {
