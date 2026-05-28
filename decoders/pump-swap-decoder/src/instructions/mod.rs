@@ -34,6 +34,8 @@ pub mod transfer_creator_fees_to_pump;
 pub mod update_admin;
 pub mod update_fee_config;
 pub mod withdraw;
+pub mod transfer_creator_fees_to_pump_v2;
+pub mod update_buyback_config;
 
 pub use self::admin_set_coin_creator::*;
 pub use self::admin_update_token_incentives::*;
@@ -61,6 +63,8 @@ pub use self::transfer_creator_fees_to_pump::*;
 pub use self::update_admin::*;
 pub use self::update_fee_config::*;
 pub use self::withdraw::*;
+pub use self::transfer_creator_fees_to_pump_v2::*;
+pub use self::update_buyback_config::*;
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -91,6 +95,8 @@ pub enum PumpSwapInstruction {
     UpdateAdmin(UpdateAdmin),
     UpdateFeeConfig(UpdateFeeConfig),
     Withdraw(Withdraw),
+    TransferCreatorFeesToPumpV2(TransferCreatorFeesToPumpV2),
+    UpdateBuybackConfig(UpdateBuybackConfig),
     // Anchor CPI Event Instruction
     CpiEvent(Box<CpiEvent>),
 }
@@ -341,6 +347,24 @@ impl carbon_core::instruction::InstructionDecoder<'_> for PumpSwapDecoder {
                 return Some(carbon_core::instruction::DecodedInstruction {
                     program_id: instruction.program_id,
                     data: PumpSwapInstruction::Withdraw(decoded),
+                    accounts: instruction.accounts.clone(),
+                });
+            }
+        }
+        {
+            if let Some(decoded) = transfer_creator_fees_to_pump_v2::TransferCreatorFeesToPumpV2::decode(data) {
+                return Some(carbon_core::instruction::DecodedInstruction {
+                    program_id: instruction.program_id,
+                    data: PumpSwapInstruction::TransferCreatorFeesToPumpV2(decoded),
+                    accounts: instruction.accounts.clone(),
+                });
+            }
+        }
+        {
+            if let Some(decoded) = update_buyback_config::UpdateBuybackConfig::decode(data) {
+                return Some(carbon_core::instruction::DecodedInstruction {
+                    program_id: instruction.program_id,
+                    data: PumpSwapInstruction::UpdateBuybackConfig(decoded),
                     accounts: instruction.accounts.clone(),
                 });
             }
