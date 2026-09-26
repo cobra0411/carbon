@@ -7,8 +7,9 @@ pub mod postgres;
 #[cfg(feature = "graphql")]
 pub mod graphql;
 
-pub mod admin_set_coin_creator;
+pub mod admin_cto_pool;
 pub mod admin_update_token_incentives;
+pub mod boost_buy_and_burn;
 pub mod buy;
 pub mod buy_exact_quote_in;
 pub mod claim_cashback;
@@ -21,42 +22,55 @@ pub mod create_pool;
 pub mod deposit;
 pub mod disable;
 pub mod extend_account;
+pub mod init_boost;
 pub mod init_user_volume_accumulator;
 pub mod migrate_pool_coin_creator;
 pub mod sell;
+pub mod set_boost_authority;
 pub mod set_coin_creator;
 pub mod set_reserved_fee_recipients;
 pub mod sync_user_volume_accumulator;
+pub mod toggle_boost;
 pub mod toggle_cashback_enabled;
 pub mod toggle_mayhem_mode;
 pub mod transfer_creator_fees_to_pump;
+pub mod transfer_creator_fees_to_pump_v2;
 pub mod update_admin;
+pub mod update_buyback_config;
+pub mod update_creator_fee_config;
 pub mod update_fee_config;
 pub mod withdraw;
 
 pub use self::{
-    admin_set_coin_creator::*, admin_update_token_incentives::*, buy::*, buy_exact_quote_in::*,
-    claim_cashback::*, claim_token_incentives::*, close_user_volume_accumulator::*,
-    collect_coin_creator_fee::*, cpi_event::*, create_config::*, create_pool::*, deposit::*,
-    disable::*, extend_account::*, init_user_volume_accumulator::*, migrate_pool_coin_creator::*,
-    sell::*, set_coin_creator::*, set_reserved_fee_recipients::*, sync_user_volume_accumulator::*,
-    toggle_cashback_enabled::*, toggle_mayhem_mode::*, transfer_creator_fees_to_pump::*,
-    update_admin::*, update_fee_config::*, withdraw::*,
+    admin_cto_pool::*, admin_update_token_incentives::*, boost_buy_and_burn::*, buy::*,
+    buy_exact_quote_in::*, claim_cashback::*, claim_token_incentives::*,
+    close_user_volume_accumulator::*, collect_coin_creator_fee::*, cpi_event::*, create_config::*,
+    create_pool::*, deposit::*, disable::*, extend_account::*, init_boost::*,
+    init_user_volume_accumulator::*, migrate_pool_coin_creator::*, sell::*, set_boost_authority::*,
+    set_coin_creator::*, set_reserved_fee_recipients::*, sync_user_volume_accumulator::*,
+    toggle_boost::*, toggle_cashback_enabled::*, toggle_mayhem_mode::*,
+    transfer_creator_fees_to_pump::*, transfer_creator_fees_to_pump_v2::*, update_admin::*,
+    update_buyback_config::*, update_creator_fee_config::*, update_fee_config::*, withdraw::*,
 };
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type", content = "data"))]
 pub enum PumpSwapInstruction {
-    AdminSetCoinCreator {
+    AdminCtoPool {
         program_id: solana_pubkey::Pubkey,
-        data: AdminSetCoinCreator,
-        accounts: AdminSetCoinCreatorInstructionAccounts,
+        data: AdminCtoPool,
+        accounts: AdminCtoPoolInstructionAccounts,
     },
     AdminUpdateTokenIncentives {
         program_id: solana_pubkey::Pubkey,
         data: AdminUpdateTokenIncentives,
         accounts: AdminUpdateTokenIncentivesInstructionAccounts,
+    },
+    BoostBuyAndBurn {
+        program_id: solana_pubkey::Pubkey,
+        data: BoostBuyAndBurn,
+        accounts: BoostBuyAndBurnInstructionAccounts,
     },
     Buy {
         program_id: solana_pubkey::Pubkey,
@@ -113,6 +127,11 @@ pub enum PumpSwapInstruction {
         data: ExtendAccount,
         accounts: ExtendAccountInstructionAccounts,
     },
+    InitBoost {
+        program_id: solana_pubkey::Pubkey,
+        data: InitBoost,
+        accounts: InitBoostInstructionAccounts,
+    },
     InitUserVolumeAccumulator {
         program_id: solana_pubkey::Pubkey,
         data: InitUserVolumeAccumulator,
@@ -127,6 +146,11 @@ pub enum PumpSwapInstruction {
         program_id: solana_pubkey::Pubkey,
         data: Sell,
         accounts: SellInstructionAccounts,
+    },
+    SetBoostAuthority {
+        program_id: solana_pubkey::Pubkey,
+        data: SetBoostAuthority,
+        accounts: SetBoostAuthorityInstructionAccounts,
     },
     SetCoinCreator {
         program_id: solana_pubkey::Pubkey,
@@ -143,6 +167,11 @@ pub enum PumpSwapInstruction {
         data: SyncUserVolumeAccumulator,
         accounts: SyncUserVolumeAccumulatorInstructionAccounts,
     },
+    ToggleBoost {
+        program_id: solana_pubkey::Pubkey,
+        data: ToggleBoost,
+        accounts: ToggleBoostInstructionAccounts,
+    },
     ToggleCashbackEnabled {
         program_id: solana_pubkey::Pubkey,
         data: ToggleCashbackEnabled,
@@ -158,10 +187,25 @@ pub enum PumpSwapInstruction {
         data: TransferCreatorFeesToPump,
         accounts: TransferCreatorFeesToPumpInstructionAccounts,
     },
+    TransferCreatorFeesToPumpV2 {
+        program_id: solana_pubkey::Pubkey,
+        data: TransferCreatorFeesToPumpV2,
+        accounts: TransferCreatorFeesToPumpV2InstructionAccounts,
+    },
     UpdateAdmin {
         program_id: solana_pubkey::Pubkey,
         data: UpdateAdmin,
         accounts: UpdateAdminInstructionAccounts,
+    },
+    UpdateBuybackConfig {
+        program_id: solana_pubkey::Pubkey,
+        data: UpdateBuybackConfig,
+        accounts: UpdateBuybackConfigInstructionAccounts,
+    },
+    UpdateCreatorFeeConfig {
+        program_id: solana_pubkey::Pubkey,
+        data: UpdateCreatorFeeConfig,
+        accounts: UpdateCreatorFeeConfigInstructionAccounts,
     },
     UpdateFeeConfig {
         program_id: solana_pubkey::Pubkey,
@@ -194,8 +238,9 @@ impl carbon_core::instruction::InstructionDecoder<'_> for PumpSwapDecoder {
         carbon_core::try_decode_instructions!(
             instruction,
             PROGRAM_ID,
-            PumpSwapInstruction::AdminSetCoinCreator => AdminSetCoinCreator,
+            PumpSwapInstruction::AdminCtoPool => AdminCtoPool,
             PumpSwapInstruction::AdminUpdateTokenIncentives => AdminUpdateTokenIncentives,
+            PumpSwapInstruction::BoostBuyAndBurn => BoostBuyAndBurn,
             PumpSwapInstruction::Buy => Buy,
             PumpSwapInstruction::BuyExactQuoteIn => BuyExactQuoteIn,
             PumpSwapInstruction::ClaimCashback => ClaimCashback,
@@ -207,16 +252,22 @@ impl carbon_core::instruction::InstructionDecoder<'_> for PumpSwapDecoder {
             PumpSwapInstruction::Deposit => Deposit,
             PumpSwapInstruction::Disable => Disable,
             PumpSwapInstruction::ExtendAccount => ExtendAccount,
+            PumpSwapInstruction::InitBoost => InitBoost,
             PumpSwapInstruction::InitUserVolumeAccumulator => InitUserVolumeAccumulator,
             PumpSwapInstruction::MigratePoolCoinCreator => MigratePoolCoinCreator,
             PumpSwapInstruction::Sell => Sell,
+            PumpSwapInstruction::SetBoostAuthority => SetBoostAuthority,
             PumpSwapInstruction::SetCoinCreator => SetCoinCreator,
             PumpSwapInstruction::SetReservedFeeRecipients => SetReservedFeeRecipients,
             PumpSwapInstruction::SyncUserVolumeAccumulator => SyncUserVolumeAccumulator,
+            PumpSwapInstruction::ToggleBoost => ToggleBoost,
             PumpSwapInstruction::ToggleCashbackEnabled => ToggleCashbackEnabled,
             PumpSwapInstruction::ToggleMayhemMode => ToggleMayhemMode,
             PumpSwapInstruction::TransferCreatorFeesToPump => TransferCreatorFeesToPump,
+            PumpSwapInstruction::TransferCreatorFeesToPumpV2 => TransferCreatorFeesToPumpV2,
             PumpSwapInstruction::UpdateAdmin => UpdateAdmin,
+            PumpSwapInstruction::UpdateBuybackConfig => UpdateBuybackConfig,
+            PumpSwapInstruction::UpdateCreatorFeeConfig => UpdateCreatorFeeConfig,
             PumpSwapInstruction::UpdateFeeConfig => UpdateFeeConfig,
             PumpSwapInstruction::Withdraw => Withdraw,
             PumpSwapInstruction::CpiEvent => CpiEvent,

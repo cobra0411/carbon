@@ -17,6 +17,12 @@ pub struct Pool {
     pub coin_creator: Pubkey,
     pub is_mayhem_mode: bool,
     pub is_cashback_coin: bool,
+    /// For non-boost pools, value is 0, so the behavior is identical to legacy
+    /// pools.
+    pub virtual_quote_reserves: i128,
+    pub creator_fee_bps: u64,
+    pub can_edit_creator_fee: bool,
+    pub is_holder_reward: bool,
 }
 
 impl Pool {

@@ -145,6 +145,40 @@ impl QueryRoot {
             .collect())
     }
 
+    async fn quote_control(
+        context: &crate::graphql::context::GraphQLContext,
+        pubkey: String,
+    ) -> FieldResult<Option<crate::accounts::graphql::QuoteControlGraphQL>> {
+        use carbon_core::postgres::{operations::Lookup, primitives::Pubkey as PgPubkey};
+        let pk = PgPubkey(
+            solana_pubkey::Pubkey::from_str(&pubkey)
+                .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?,
+        );
+        let row = crate::accounts::postgres::QuoteControlRow::lookup(pk, &context.pool)
+            .await
+            .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(row.and_then(|row| row.try_into().ok()))
+    }
+
+    async fn list_quote_control(
+        context: &crate::graphql::context::GraphQLContext,
+        limit: i32,
+        offset: i32,
+    ) -> FieldResult<Vec<crate::accounts::graphql::QuoteControlGraphQL>> {
+        let rows: Vec<crate::accounts::postgres::QuoteControlRow> = sqlx::query_as(
+            r#"SELECT * FROM quote_control_account ORDER BY __slot DESC LIMIT $1 OFFSET $2"#,
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
     async fn sharing_config(
         context: &crate::graphql::context::GraphQLContext,
         pubkey: String,
@@ -214,6 +248,44 @@ impl QueryRoot {
     }
 
     // Instructions (per-instruction list and lookup by signature+index)
+    async fn add_quote_control_mint(
+        context: &crate::graphql::context::GraphQLContext,
+        signature: String,
+        instruction_index: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::AddQuoteControlMintGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::AddQuoteControlMintRow> = sqlx::query_as(
+            r#"SELECT * FROM add_quote_control_mint_instruction WHERE __signature = $1 AND __instruction_index = $2 ORDER BY __stack_height ASC"#,
+        )
+        .bind(signature)
+        .bind(instruction_index)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn list_add_quote_control_mint(
+        context: &crate::graphql::context::GraphQLContext,
+        limit: i32,
+        offset: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::AddQuoteControlMintGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::AddQuoteControlMintRow> = sqlx::query_as(
+            r#"SELECT * FROM add_quote_control_mint_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
     async fn add_quote_mint(
         context: &crate::graphql::context::GraphQLContext,
         signature: String,
@@ -252,13 +324,13 @@ impl QueryRoot {
             .collect())
     }
 
-    async fn admin_set_creator(
+    async fn admin_cto(
         context: &crate::graphql::context::GraphQLContext,
         signature: String,
         instruction_index: i32,
-    ) -> FieldResult<Vec<crate::instructions::graphql::AdminSetCreatorGraphQL>> {
-        let rows: Vec<crate::instructions::postgres::AdminSetCreatorRow> = sqlx::query_as(
-            r#"SELECT * FROM admin_set_creator_instruction WHERE __signature = $1 AND __instruction_index = $2 ORDER BY __stack_height ASC"#,
+    ) -> FieldResult<Vec<crate::instructions::graphql::AdminCtoGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::AdminCtoRow> = sqlx::query_as(
+            r#"SELECT * FROM admin_cto_instruction WHERE __signature = $1 AND __instruction_index = $2 ORDER BY __stack_height ASC"#,
         )
         .bind(signature)
         .bind(instruction_index)
@@ -271,13 +343,13 @@ impl QueryRoot {
             .collect())
     }
 
-    async fn list_admin_set_creator(
+    async fn list_admin_cto(
         context: &crate::graphql::context::GraphQLContext,
         limit: i32,
         offset: i32,
-    ) -> FieldResult<Vec<crate::instructions::graphql::AdminSetCreatorGraphQL>> {
-        let rows: Vec<crate::instructions::postgres::AdminSetCreatorRow> = sqlx::query_as(
-            r#"SELECT * FROM admin_set_creator_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
+    ) -> FieldResult<Vec<crate::instructions::graphql::AdminCtoGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::AdminCtoRow> = sqlx::query_as(
+            r#"SELECT * FROM admin_cto_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
         )
         .bind(limit)
         .bind(offset)
@@ -708,6 +780,44 @@ impl QueryRoot {
             .collect())
     }
 
+    async fn collect_creator_fee_v2(
+        context: &crate::graphql::context::GraphQLContext,
+        signature: String,
+        instruction_index: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::CollectCreatorFeeV2GraphQL>> {
+        let rows: Vec<crate::instructions::postgres::CollectCreatorFeeV2Row> = sqlx::query_as(
+            r#"SELECT * FROM collect_creator_fee_v2_instruction WHERE __signature = $1 AND __instruction_index = $2 ORDER BY __stack_height ASC"#,
+        )
+        .bind(signature)
+        .bind(instruction_index)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn list_collect_creator_fee_v2(
+        context: &crate::graphql::context::GraphQLContext,
+        limit: i32,
+        offset: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::CollectCreatorFeeV2GraphQL>> {
+        let rows: Vec<crate::instructions::postgres::CollectCreatorFeeV2Row> = sqlx::query_as(
+            r#"SELECT * FROM collect_creator_fee_v2_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
     async fn create(
         context: &crate::graphql::context::GraphQLContext,
         signature: String,
@@ -810,6 +920,82 @@ impl QueryRoot {
     ) -> FieldResult<Vec<crate::instructions::graphql::DistributeCreatorFeesGraphQL>> {
         let rows: Vec<crate::instructions::postgres::DistributeCreatorFeesRow> = sqlx::query_as(
             r#"SELECT * FROM distribute_creator_fees_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn distribute_creator_fees_v2(
+        context: &crate::graphql::context::GraphQLContext,
+        signature: String,
+        instruction_index: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::DistributeCreatorFeesV2GraphQL>> {
+        let rows: Vec<crate::instructions::postgres::DistributeCreatorFeesV2Row> = sqlx::query_as(
+            r#"SELECT * FROM distribute_creator_fees_v2_instruction WHERE __signature = $1 AND __instruction_index = $2 ORDER BY __stack_height ASC"#,
+        )
+        .bind(signature)
+        .bind(instruction_index)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn list_distribute_creator_fees_v2(
+        context: &crate::graphql::context::GraphQLContext,
+        limit: i32,
+        offset: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::DistributeCreatorFeesV2GraphQL>> {
+        let rows: Vec<crate::instructions::postgres::DistributeCreatorFeesV2Row> = sqlx::query_as(
+            r#"SELECT * FROM distribute_creator_fees_v2_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn distribute_fee_to_holders(
+        context: &crate::graphql::context::GraphQLContext,
+        signature: String,
+        instruction_index: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::DistributeFeeToHoldersGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::DistributeFeeToHoldersRow> = sqlx::query_as(
+            r#"SELECT * FROM distribute_fee_to_holders_instruction WHERE __signature = $1 AND __instruction_index = $2 ORDER BY __stack_height ASC"#,
+        )
+        .bind(signature)
+        .bind(instruction_index)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn list_distribute_fee_to_holders(
+        context: &crate::graphql::context::GraphQLContext,
+        limit: i32,
+        offset: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::DistributeFeeToHoldersGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::DistributeFeeToHoldersRow> = sqlx::query_as(
+            r#"SELECT * FROM distribute_fee_to_holders_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
         )
         .bind(limit)
         .bind(offset)
@@ -974,6 +1160,44 @@ impl QueryRoot {
             .collect())
     }
 
+    async fn initialize_quote_control(
+        context: &crate::graphql::context::GraphQLContext,
+        signature: String,
+        instruction_index: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::InitializeQuoteControlGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::InitializeQuoteControlRow> = sqlx::query_as(
+            r#"SELECT * FROM initialize_quote_control_instruction WHERE __signature = $1 AND __instruction_index = $2 ORDER BY __stack_height ASC"#,
+        )
+        .bind(signature)
+        .bind(instruction_index)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn list_initialize_quote_control(
+        context: &crate::graphql::context::GraphQLContext,
+        limit: i32,
+        offset: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::InitializeQuoteControlGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::InitializeQuoteControlRow> = sqlx::query_as(
+            r#"SELECT * FROM initialize_quote_control_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
     async fn migrate(
         context: &crate::graphql::context::GraphQLContext,
         signature: String,
@@ -1076,6 +1300,44 @@ impl QueryRoot {
     ) -> FieldResult<Vec<crate::instructions::graphql::MigrateV2GraphQL>> {
         let rows: Vec<crate::instructions::postgres::MigrateV2Row> = sqlx::query_as(
             r#"SELECT * FROM migrate_v2_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn remove_quote_control_mint(
+        context: &crate::graphql::context::GraphQLContext,
+        signature: String,
+        instruction_index: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::RemoveQuoteControlMintGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::RemoveQuoteControlMintRow> = sqlx::query_as(
+            r#"SELECT * FROM remove_quote_control_mint_instruction WHERE __signature = $1 AND __instruction_index = $2 ORDER BY __stack_height ASC"#,
+        )
+        .bind(signature)
+        .bind(instruction_index)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn list_remove_quote_control_mint(
+        context: &crate::graphql::context::GraphQLContext,
+        limit: i32,
+        offset: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::RemoveQuoteControlMintGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::RemoveQuoteControlMintRow> = sqlx::query_as(
+            r#"SELECT * FROM remove_quote_control_mint_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
         )
         .bind(limit)
         .bind(offset)
@@ -1354,6 +1616,44 @@ impl QueryRoot {
             .collect())
     }
 
+    async fn set_quote_control_admin(
+        context: &crate::graphql::context::GraphQLContext,
+        signature: String,
+        instruction_index: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::SetQuoteControlAdminGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::SetQuoteControlAdminRow> = sqlx::query_as(
+            r#"SELECT * FROM set_quote_control_admin_instruction WHERE __signature = $1 AND __instruction_index = $2 ORDER BY __stack_height ASC"#,
+        )
+        .bind(signature)
+        .bind(instruction_index)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn list_set_quote_control_admin(
+        context: &crate::graphql::context::GraphQLContext,
+        limit: i32,
+        offset: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::SetQuoteControlAdminGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::SetQuoteControlAdminRow> = sqlx::query_as(
+            r#"SELECT * FROM set_quote_control_admin_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
     async fn set_reserved_fee_recipients(
         context: &crate::graphql::context::GraphQLContext,
         signature: String,
@@ -1620,6 +1920,44 @@ impl QueryRoot {
             .collect())
     }
 
+    async fn update_creator_fee_config(
+        context: &crate::graphql::context::GraphQLContext,
+        signature: String,
+        instruction_index: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::UpdateCreatorFeeConfigGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::UpdateCreatorFeeConfigRow> = sqlx::query_as(
+            r#"SELECT * FROM update_creator_fee_config_instruction WHERE __signature = $1 AND __instruction_index = $2 ORDER BY __stack_height ASC"#,
+        )
+        .bind(signature)
+        .bind(instruction_index)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn list_update_creator_fee_config(
+        context: &crate::graphql::context::GraphQLContext,
+        limit: i32,
+        offset: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::UpdateCreatorFeeConfigGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::UpdateCreatorFeeConfigRow> = sqlx::query_as(
+            r#"SELECT * FROM update_creator_fee_config_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
     async fn update_global_authority(
         context: &crate::graphql::context::GraphQLContext,
         signature: String,
@@ -1646,6 +1984,44 @@ impl QueryRoot {
     ) -> FieldResult<Vec<crate::instructions::graphql::UpdateGlobalAuthorityGraphQL>> {
         let rows: Vec<crate::instructions::postgres::UpdateGlobalAuthorityRow> = sqlx::query_as(
             r#"SELECT * FROM update_global_authority_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn update_holder_reward_config(
+        context: &crate::graphql::context::GraphQLContext,
+        signature: String,
+        instruction_index: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::UpdateHolderRewardConfigGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::UpdateHolderRewardConfigRow> = sqlx::query_as(
+            r#"SELECT * FROM update_holder_reward_config_instruction WHERE __signature = $1 AND __instruction_index = $2 ORDER BY __stack_height ASC"#,
+        )
+        .bind(signature)
+        .bind(instruction_index)
+        .fetch_all(&*context.pool)
+        .await
+        .map_err(|e| juniper::FieldError::new(e.to_string(), juniper::Value::null()))?;
+        Ok(rows
+            .into_iter()
+            .filter_map(|row| row.try_into().ok())
+            .collect())
+    }
+
+    async fn list_update_holder_reward_config(
+        context: &crate::graphql::context::GraphQLContext,
+        limit: i32,
+        offset: i32,
+    ) -> FieldResult<Vec<crate::instructions::graphql::UpdateHolderRewardConfigGraphQL>> {
+        let rows: Vec<crate::instructions::postgres::UpdateHolderRewardConfigRow> = sqlx::query_as(
+            r#"SELECT * FROM update_holder_reward_config_instruction ORDER BY __slot DESC, __signature DESC, __instruction_index ASC LIMIT $1 OFFSET $2"#,
         )
         .bind(limit)
         .bind(offset)

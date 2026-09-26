@@ -24,6 +24,8 @@ pub struct CreateEventGraphQL {
     pub is_cashback_enabled: bool,
     pub quote_mint: Pubkey,
     pub virtual_quote_reserves: U64,
+    pub creator_fee_bps: U64,
+    pub is_holder_reward: bool,
 }
 
 impl From<crate::types::CreateEvent> for CreateEventGraphQL {
@@ -54,6 +56,8 @@ impl From<crate::types::CreateEvent> for CreateEventGraphQL {
             virtual_quote_reserves: carbon_core::graphql::primitives::U64(
                 original.virtual_quote_reserves,
             ),
+            creator_fee_bps: carbon_core::graphql::primitives::U64(original.creator_fee_bps),
+            is_holder_reward: original.is_holder_reward,
         }
     }
 }

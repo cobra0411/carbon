@@ -293,6 +293,16 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}) {
                         optionalBoolWrapperTypes.add(node.name);
                     }
 
+                    let optionalIntegerWrapperType: string | null = null;
+                    if (
+                        isNode(node.type, 'tupleTypeNode') &&
+                        node.type.items.length === 1 &&
+                        isNode(node.type.items[0], 'numberTypeNode') &&
+                        /^[ui](8|16|32|64|128)$/.test(node.type.items[0].format)
+                    ) {
+                        optionalIntegerWrapperType = node.type.items[0].format;
+                    }
+
                     // Add token-2022 specific imports for Extension type
                     // Use case-insensitive check to match impl block condition
                     const isToken2022ForImports = isToken2022Program(currentProgram);
@@ -315,6 +325,7 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}) {
                         typeManifest,
                         needsNewtypeWrapper,
                         isOptionalBoolWrapper,
+                        optionalIntegerWrapperType,
                         arraySize,
                         program: currentProgram,
                         originalProgramName: currentProgram?.name,

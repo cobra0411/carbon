@@ -33,6 +33,10 @@ pub struct GlobalGraphQL {
     pub buyback_basis_points: U64,
     pub initial_virtual_quote_reserves: U64,
     pub whitelisted_quote_mints: Vec<Pubkey>,
+    pub creator_fee_configurable: bool,
+    pub max_configurable_creator_fee_bps: U64,
+    pub holder_reward_claim_authority: Pubkey,
+    pub is_holder_reward_enabled: bool,
 }
 
 impl TryFrom<crate::accounts::postgres::GlobalRow> for GlobalGraphQL {
@@ -97,6 +101,14 @@ impl TryFrom<crate::accounts::postgres::GlobalRow> for GlobalGraphQL {
                 .into_iter()
                 .map(|item| carbon_core::graphql::primitives::Pubkey(item.0))
                 .collect(),
+            creator_fee_configurable: row.creator_fee_configurable,
+            max_configurable_creator_fee_bps: carbon_core::graphql::primitives::U64(
+                *row.max_configurable_creator_fee_bps,
+            ),
+            holder_reward_claim_authority: carbon_core::graphql::primitives::Pubkey(
+                row.holder_reward_claim_authority.0,
+            ),
+            is_holder_reward_enabled: row.is_holder_reward_enabled,
         })
     }
 }

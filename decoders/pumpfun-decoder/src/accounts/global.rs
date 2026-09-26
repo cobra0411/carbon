@@ -31,6 +31,10 @@ pub struct Global {
     pub buyback_basis_points: u64,
     pub initial_virtual_quote_reserves: u64,
     pub whitelisted_quote_mints: [Pubkey; 1],
+    pub creator_fee_configurable: bool,
+    pub max_configurable_creator_fee_bps: u64,
+    pub holder_reward_claim_authority: Pubkey,
+    pub is_holder_reward_enabled: bool,
 }
 
 impl Global {

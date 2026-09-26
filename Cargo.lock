@@ -2331,6 +2331,7 @@ dependencies = [
  "carbon-test-utils",
  "juniper",
  "serde",
+ "serde-big-array",
  "serde_json",
  "solana-account",
  "solana-instruction",

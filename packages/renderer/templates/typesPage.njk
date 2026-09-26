@@ -25,6 +25,27 @@ impl borsh::BorshDeserialize for {{ definedType.name | pascalCase }} {
         }
     }
 }
+{% elif optionalIntegerWrapperType %}
+{{ macros.optionalBoolDerives() }}
+pub struct {{ definedType.name | pascalCase }}(pub {{ optionalIntegerWrapperType }});
+
+impl borsh::BorshDeserialize for {{ definedType.name | pascalCase }} {
+    fn deserialize_reader<R: std::io::Read>(reader: &mut R) -> std::io::Result<Self> {
+        let mut buf = [0u8; std::mem::size_of::<{{ optionalIntegerWrapperType }}>()];
+        let mut filled = 0;
+        while filled < buf.len() {
+            match reader.read(&mut buf[filled..])? {
+                0 => break,
+                read => filled += read,
+            }
+        }
+        match filled {
+            0 => Ok({{ definedType.name | pascalCase }}(0)),
+            full if full == buf.len() => Ok({{ definedType.name | pascalCase }}({{ optionalIntegerWrapperType }}::from_le_bytes(buf))),
+            _ => Err(std::io::ErrorKind::UnexpectedEof.into()),
+        }
+    }
+}
 {% elif needsNewtypeWrapper %}
 #[derive(Debug, Clone, borsh::BorshSerialize, borsh::BorshDeserialize, PartialEq)]
 pub struct {{ definedType.name | pascalCase }}(pub {{ typeManifest.type }});

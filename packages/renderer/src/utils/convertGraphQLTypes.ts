@@ -37,6 +37,20 @@ function isOptionalBoolNewtype(typeName: string): boolean {
     return typeName.toLowerCase() === 'optionbool';
 }
 
+const OPTIONAL_INTEGER_GRAPHQL_PRIMITIVE: Record<string, string> = {
+    optionu8: 'U8',
+    optionu32: 'U32',
+    optioni64: 'I64',
+    optionu64: 'U64',
+    optioni128: 'I128',
+    optionu128: 'U128',
+};
+
+function optionalIntegerNewtypeConversion(typeName: string, inner: string): string | null {
+    const primitive = OPTIONAL_INTEGER_GRAPHQL_PRIMITIVE[typeName.toLowerCase()];
+    return primitive ? `carbon_core::graphql::primitives::${primitive}(${inner})` : null;
+}
+
 function requiresClosureForPrimitive(funcRef: string, innerExpr: string, param: string): boolean {
     return innerExpr.includes(`${param}.`);
 }
@@ -237,6 +251,10 @@ export function buildConversionFromOriginal(typeNode: TypeNode, fieldAccess: str
         const typeName = typeNode.name.toLowerCase();
         if (isOptionalBoolNewtype(typeName)) {
             return `${fieldAccess}.0`; // unwrap newtype: OptionBool(bool) -> bool
+        }
+        const optionalInteger = optionalIntegerNewtypeConversion(typeName, `${fieldAccess}.0`);
+        if (optionalInteger) {
+            return optionalInteger;
         }
         if (isBooleanTypeAlias(typeName)) {
             return fieldAccess;
@@ -553,6 +571,10 @@ export function buildConversionFromPostgresRow(typeNode: TypeNode, fieldAccess: 
         }
         if (isOptionalBoolNewtype(typeName)) {
             return `${fieldAccess}.0.0`; // unwrap Json<OptionBool>, then unwrap OptionBool(bool)
+        }
+        const optionalIntegerRow = optionalIntegerNewtypeConversion(typeName, `${fieldAccess}.0.0`);
+        if (optionalIntegerRow) {
+            return optionalIntegerRow;
         }
         if (isBooleanTypeAlias(typeName)) {
             return handleBooleanTypeConversion(fieldAccess, true, false);

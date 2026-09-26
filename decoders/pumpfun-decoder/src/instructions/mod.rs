@@ -7,8 +7,9 @@ pub mod postgres;
 #[cfg(feature = "graphql")]
 pub mod graphql;
 
+pub mod add_quote_control_mint;
 pub mod add_quote_mint;
-pub mod admin_set_creator;
+pub mod admin_cto;
 pub mod admin_set_idl_authority;
 pub mod admin_update_token_incentives;
 pub mod buy;
@@ -20,17 +21,22 @@ pub mod claim_cashback_v2;
 pub mod claim_token_incentives;
 pub mod close_user_volume_accumulator;
 pub mod collect_creator_fee;
+pub mod collect_creator_fee_v2;
 pub mod cpi_event;
 pub mod create;
 pub mod create_v2;
 pub mod distribute_creator_fees;
+pub mod distribute_creator_fees_v2;
+pub mod distribute_fee_to_holders;
 pub mod extend_account;
 pub mod get_minimum_distributable_fee;
 pub mod init_user_volume_accumulator;
 pub mod initialize;
+pub mod initialize_quote_control;
 pub mod migrate;
 pub mod migrate_bonding_curve_creator;
 pub mod migrate_v2;
+pub mod remove_quote_control_mint;
 pub mod remove_quote_mint;
 pub mod sell;
 pub mod sell_v2;
@@ -38,6 +44,7 @@ pub mod set_creator;
 pub mod set_mayhem_virtual_params;
 pub mod set_metaplex_creator;
 pub mod set_params;
+pub mod set_quote_control_admin;
 pub mod set_reserved_fee_recipients;
 pub mod set_virtual_quote_reserves;
 pub mod sync_user_volume_accumulator;
@@ -45,35 +52,45 @@ pub mod toggle_cashback_enabled;
 pub mod toggle_create_v2;
 pub mod toggle_mayhem_mode;
 pub mod update_buyback_config;
+pub mod update_creator_fee_config;
 pub mod update_global_authority;
+pub mod update_holder_reward_config;
 
 pub use self::{
-    add_quote_mint::*, admin_set_creator::*, admin_set_idl_authority::*,
+    add_quote_control_mint::*, add_quote_mint::*, admin_cto::*, admin_set_idl_authority::*,
     admin_update_token_incentives::*, buy::*, buy_exact_quote_in_v2::*, buy_exact_sol_in::*,
     buy_v2::*, claim_cashback::*, claim_cashback_v2::*, claim_token_incentives::*,
-    close_user_volume_accumulator::*, collect_creator_fee::*, cpi_event::*, create::*,
-    create_v2::*, distribute_creator_fees::*, extend_account::*, get_minimum_distributable_fee::*,
-    init_user_volume_accumulator::*, initialize::*, migrate::*, migrate_bonding_curve_creator::*,
-    migrate_v2::*, remove_quote_mint::*, sell::*, sell_v2::*, set_creator::*,
+    close_user_volume_accumulator::*, collect_creator_fee::*, collect_creator_fee_v2::*,
+    cpi_event::*, create::*, create_v2::*, distribute_creator_fees::*,
+    distribute_creator_fees_v2::*, distribute_fee_to_holders::*, extend_account::*,
+    get_minimum_distributable_fee::*, init_user_volume_accumulator::*, initialize::*,
+    initialize_quote_control::*, migrate::*, migrate_bonding_curve_creator::*, migrate_v2::*,
+    remove_quote_control_mint::*, remove_quote_mint::*, sell::*, sell_v2::*, set_creator::*,
     set_mayhem_virtual_params::*, set_metaplex_creator::*, set_params::*,
-    set_reserved_fee_recipients::*, set_virtual_quote_reserves::*, sync_user_volume_accumulator::*,
-    toggle_cashback_enabled::*, toggle_create_v2::*, toggle_mayhem_mode::*,
-    update_buyback_config::*, update_global_authority::*,
+    set_quote_control_admin::*, set_reserved_fee_recipients::*, set_virtual_quote_reserves::*,
+    sync_user_volume_accumulator::*, toggle_cashback_enabled::*, toggle_create_v2::*,
+    toggle_mayhem_mode::*, update_buyback_config::*, update_creator_fee_config::*,
+    update_global_authority::*, update_holder_reward_config::*,
 };
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type", content = "data"))]
 pub enum PumpfunInstruction {
+    AddQuoteControlMint {
+        program_id: solana_pubkey::Pubkey,
+        data: AddQuoteControlMint,
+        accounts: AddQuoteControlMintInstructionAccounts,
+    },
     AddQuoteMint {
         program_id: solana_pubkey::Pubkey,
         data: AddQuoteMint,
         accounts: AddQuoteMintInstructionAccounts,
     },
-    AdminSetCreator {
+    AdminCto {
         program_id: solana_pubkey::Pubkey,
-        data: AdminSetCreator,
-        accounts: AdminSetCreatorInstructionAccounts,
+        data: AdminCto,
+        accounts: AdminCtoInstructionAccounts,
     },
     AdminSetIdlAuthority {
         program_id: solana_pubkey::Pubkey,
@@ -130,6 +147,11 @@ pub enum PumpfunInstruction {
         data: CollectCreatorFee,
         accounts: CollectCreatorFeeInstructionAccounts,
     },
+    CollectCreatorFeeV2 {
+        program_id: solana_pubkey::Pubkey,
+        data: CollectCreatorFeeV2,
+        accounts: CollectCreatorFeeV2InstructionAccounts,
+    },
     Create {
         program_id: solana_pubkey::Pubkey,
         data: Create,
@@ -145,6 +167,16 @@ pub enum PumpfunInstruction {
         data: DistributeCreatorFees,
         accounts: DistributeCreatorFeesInstructionAccounts,
     },
+    DistributeCreatorFeesV2 {
+        program_id: solana_pubkey::Pubkey,
+        data: DistributeCreatorFeesV2,
+        accounts: DistributeCreatorFeesV2InstructionAccounts,
+    },
+    DistributeFeeToHolders {
+        program_id: solana_pubkey::Pubkey,
+        data: DistributeFeeToHolders,
+        accounts: DistributeFeeToHoldersInstructionAccounts,
+    },
     ExtendAccount {
         program_id: solana_pubkey::Pubkey,
         data: ExtendAccount,
@@ -159,6 +191,11 @@ pub enum PumpfunInstruction {
         program_id: solana_pubkey::Pubkey,
         data: Initialize,
         accounts: InitializeInstructionAccounts,
+    },
+    InitializeQuoteControl {
+        program_id: solana_pubkey::Pubkey,
+        data: InitializeQuoteControl,
+        accounts: InitializeQuoteControlInstructionAccounts,
     },
     InitUserVolumeAccumulator {
         program_id: solana_pubkey::Pubkey,
@@ -179,6 +216,11 @@ pub enum PumpfunInstruction {
         program_id: solana_pubkey::Pubkey,
         data: MigrateV2,
         accounts: MigrateV2InstructionAccounts,
+    },
+    RemoveQuoteControlMint {
+        program_id: solana_pubkey::Pubkey,
+        data: RemoveQuoteControlMint,
+        accounts: RemoveQuoteControlMintInstructionAccounts,
     },
     RemoveQuoteMint {
         program_id: solana_pubkey::Pubkey,
@@ -215,6 +257,11 @@ pub enum PumpfunInstruction {
         data: SetParams,
         accounts: SetParamsInstructionAccounts,
     },
+    SetQuoteControlAdmin {
+        program_id: solana_pubkey::Pubkey,
+        data: SetQuoteControlAdmin,
+        accounts: SetQuoteControlAdminInstructionAccounts,
+    },
     SetReservedFeeRecipients {
         program_id: solana_pubkey::Pubkey,
         data: SetReservedFeeRecipients,
@@ -250,10 +297,20 @@ pub enum PumpfunInstruction {
         data: UpdateBuybackConfig,
         accounts: UpdateBuybackConfigInstructionAccounts,
     },
+    UpdateCreatorFeeConfig {
+        program_id: solana_pubkey::Pubkey,
+        data: UpdateCreatorFeeConfig,
+        accounts: UpdateCreatorFeeConfigInstructionAccounts,
+    },
     UpdateGlobalAuthority {
         program_id: solana_pubkey::Pubkey,
         data: UpdateGlobalAuthority,
         accounts: UpdateGlobalAuthorityInstructionAccounts,
+    },
+    UpdateHolderRewardConfig {
+        program_id: solana_pubkey::Pubkey,
+        data: UpdateHolderRewardConfig,
+        accounts: UpdateHolderRewardConfigInstructionAccounts,
     },
     CpiEvent {
         program_id: solana_pubkey::Pubkey,
@@ -276,8 +333,9 @@ impl carbon_core::instruction::InstructionDecoder<'_> for PumpfunDecoder {
         carbon_core::try_decode_instructions!(
             instruction,
             PROGRAM_ID,
+            PumpfunInstruction::AddQuoteControlMint => AddQuoteControlMint,
             PumpfunInstruction::AddQuoteMint => AddQuoteMint,
-            PumpfunInstruction::AdminSetCreator => AdminSetCreator,
+            PumpfunInstruction::AdminCto => AdminCto,
             PumpfunInstruction::AdminSetIdlAuthority => AdminSetIdlAuthority,
             PumpfunInstruction::AdminUpdateTokenIncentives => AdminUpdateTokenIncentives,
             PumpfunInstruction::Buy => Buy,
@@ -289,16 +347,21 @@ impl carbon_core::instruction::InstructionDecoder<'_> for PumpfunDecoder {
             PumpfunInstruction::ClaimTokenIncentives => ClaimTokenIncentives,
             PumpfunInstruction::CloseUserVolumeAccumulator => CloseUserVolumeAccumulator,
             PumpfunInstruction::CollectCreatorFee => CollectCreatorFee,
+            PumpfunInstruction::CollectCreatorFeeV2 => CollectCreatorFeeV2,
             PumpfunInstruction::Create => Create,
             PumpfunInstruction::CreateV2 => CreateV2,
             PumpfunInstruction::DistributeCreatorFees => DistributeCreatorFees,
+            PumpfunInstruction::DistributeCreatorFeesV2 => DistributeCreatorFeesV2,
+            PumpfunInstruction::DistributeFeeToHolders => DistributeFeeToHolders,
             PumpfunInstruction::ExtendAccount => ExtendAccount,
             PumpfunInstruction::GetMinimumDistributableFee => GetMinimumDistributableFee,
             PumpfunInstruction::Initialize => Initialize,
+            PumpfunInstruction::InitializeQuoteControl => InitializeQuoteControl,
             PumpfunInstruction::InitUserVolumeAccumulator => InitUserVolumeAccumulator,
             PumpfunInstruction::Migrate => Migrate,
             PumpfunInstruction::MigrateBondingCurveCreator => MigrateBondingCurveCreator,
             PumpfunInstruction::MigrateV2 => MigrateV2,
+            PumpfunInstruction::RemoveQuoteControlMint => RemoveQuoteControlMint,
             PumpfunInstruction::RemoveQuoteMint => RemoveQuoteMint,
             PumpfunInstruction::Sell => Sell,
             PumpfunInstruction::SellV2 => SellV2,
@@ -306,6 +369,7 @@ impl carbon_core::instruction::InstructionDecoder<'_> for PumpfunDecoder {
             PumpfunInstruction::SetMayhemVirtualParams => SetMayhemVirtualParams,
             PumpfunInstruction::SetMetaplexCreator => SetMetaplexCreator,
             PumpfunInstruction::SetParams => SetParams,
+            PumpfunInstruction::SetQuoteControlAdmin => SetQuoteControlAdmin,
             PumpfunInstruction::SetReservedFeeRecipients => SetReservedFeeRecipients,
             PumpfunInstruction::SetVirtualQuoteReserves => SetVirtualQuoteReserves,
             PumpfunInstruction::SyncUserVolumeAccumulator => SyncUserVolumeAccumulator,
@@ -313,7 +377,9 @@ impl carbon_core::instruction::InstructionDecoder<'_> for PumpfunDecoder {
             PumpfunInstruction::ToggleCreateV2 => ToggleCreateV2,
             PumpfunInstruction::ToggleMayhemMode => ToggleMayhemMode,
             PumpfunInstruction::UpdateBuybackConfig => UpdateBuybackConfig,
+            PumpfunInstruction::UpdateCreatorFeeConfig => UpdateCreatorFeeConfig,
             PumpfunInstruction::UpdateGlobalAuthority => UpdateGlobalAuthority,
+            PumpfunInstruction::UpdateHolderRewardConfig => UpdateHolderRewardConfig,
             PumpfunInstruction::CpiEvent => CpiEvent,
         )
     }

@@ -14,6 +14,9 @@ pub struct BondingCurve {
     pub is_mayhem_mode: bool,
     pub is_cashback_coin: bool,
     pub quote_mint: Pubkey,
+    pub creator_fee_bps: u64,
+    pub can_edit_creator_fee: bool,
+    pub is_holder_reward: bool,
 }
 
 impl BondingCurve {

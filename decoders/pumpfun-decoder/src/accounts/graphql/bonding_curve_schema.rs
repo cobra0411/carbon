@@ -18,6 +18,9 @@ pub struct BondingCurveGraphQL {
     pub is_mayhem_mode: bool,
     pub is_cashback_coin: bool,
     pub quote_mint: Pubkey,
+    pub creator_fee_bps: U64,
+    pub can_edit_creator_fee: bool,
+    pub is_holder_reward: bool,
 }
 
 impl TryFrom<crate::accounts::postgres::BondingCurveRow> for BondingCurveGraphQL {
@@ -39,6 +42,9 @@ impl TryFrom<crate::accounts::postgres::BondingCurveRow> for BondingCurveGraphQL
             is_mayhem_mode: row.is_mayhem_mode,
             is_cashback_coin: row.is_cashback_coin,
             quote_mint: carbon_core::graphql::primitives::Pubkey(row.quote_mint.0),
+            creator_fee_bps: carbon_core::graphql::primitives::U64(*row.creator_fee_bps),
+            can_edit_creator_fee: row.can_edit_creator_fee,
+            is_holder_reward: row.is_holder_reward,
         })
     }
 }
